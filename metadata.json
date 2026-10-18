@@ -1,0 +1,8 @@
+{
+  "name": "The Tiebreaker: Enterprise Edition",
+  "description": "Plataforma analítica empresarial para la toma de decisiones cuantitativa de líderes de proyectos y analistas de datos, con matrices ponderadas, análisis de sensibilidad What-If y reportes ejecutivos.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
