@@ -6,12 +6,10 @@ import {
   Sparkles,
   ArrowRight,
   HelpCircle,
-  Briefcase,
-  Layers,
-  Sliders,
 } from 'lucide-react';
 import type { EnterpriseDecisionInput } from '../../types/enterprise';
-import { ENTERPRISE_PRESETS } from '../../data/enterprisePresets';
+import { getLocalizedEnterprisePresets } from '../../data/enterprisePresets';
+import { useTranslation } from '../../i18n';
 
 interface EnterpriseFormProps {
   onSubmit: (input: EnterpriseDecisionInput) => void;
@@ -19,6 +17,9 @@ interface EnterpriseFormProps {
 }
 
 export const EnterpriseForm: React.FC<EnterpriseFormProps> = ({ onSubmit, isLoading }) => {
+  const t = useTranslation();
+  const presets = getLocalizedEnterprisePresets(t);
+
   const [title, setTitle] = useState('');
   const [businessObjective, setBusinessObjective] = useState('');
   const [department, setDepartment] = useState('Data & Analytics');
@@ -27,7 +28,7 @@ export const EnterpriseForm: React.FC<EnterpriseFormProps> = ({ onSubmit, isLoad
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const handleApplyPreset = (presetId: string) => {
-    const found = ENTERPRISE_PRESETS.find((p) => p.id === presetId);
+    const found = presets.find((p) => p.id === presetId);
     if (!found) return;
     setTitle(found.input.title);
     setBusinessObjective(found.input.businessObjective);
@@ -57,13 +58,13 @@ export const EnterpriseForm: React.FC<EnterpriseFormProps> = ({ onSubmit, isLoad
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) {
-      setValidationError('Por favor indica el título de la decisión empresarial a evaluar.');
+      setValidationError(t.form.errorTitleRequired);
       return;
     }
 
     const clean = optionNames.map((o) => o.trim()).filter((o) => o.length > 0);
     if (clean.length < 2) {
-      setValidationError('Debes plantear al menos 2 alternativas o proveedores a comparar.');
+      setValidationError(t.form.errorMinAlternatives);
       return;
     }
 
@@ -83,13 +84,13 @@ export const EnterpriseForm: React.FC<EnterpriseFormProps> = ({ onSubmit, isLoad
       <div className="text-center max-w-2xl mx-auto space-y-1.5 sm:space-y-2">
         <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-slate-900 text-slate-200 text-[10px] sm:text-xs font-semibold tracking-wide border border-slate-700">
           <Database className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-indigo-400" />
-          <span>The Tiebreaker: Enterprise Edition</span>
+          <span>{t.form.badge}</span>
         </div>
         <h1 className="text-lg sm:text-3xl font-extrabold text-slate-900 tracking-tight text-balance">
-          Toma de Decisiones Cuantitativa para Líderes de Datos & Proyectos
+          {t.form.mainTitle}
         </h1>
         <p className="text-[11px] sm:text-xs text-slate-600 leading-relaxed max-w-xl mx-auto">
-          Matrices de Decisión Ponderadas (PCDA), simulaciones de sensibilidad What-If, evidencias empíricas y reportes ejecutivos.
+          {t.form.mainDescription}
         </p>
       </div>
 
@@ -97,12 +98,12 @@ export const EnterpriseForm: React.FC<EnterpriseFormProps> = ({ onSubmit, isLoad
       <div className="p-3 sm:p-4 rounded-xl bg-white border border-slate-200 shadow-xs space-y-2 sm:space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500">
-            Escenarios de Prueba (1 clic para cargar)
+            {t.form.presetsTitle}
           </span>
-          <span className="text-[10px] text-indigo-600 font-medium sm:hidden">Desliza para ver más →</span>
+          <span className="text-[10px] text-indigo-600 font-medium sm:hidden">{t.form.swipeHint}</span>
         </div>
         <div className="flex sm:grid sm:grid-cols-3 gap-2 sm:gap-3 overflow-x-auto pb-1 sm:pb-0">
-          {ENTERPRISE_PRESETS.map((p) => (
+          {presets.map((p) => (
             <button
               key={p.id}
               type="button"
@@ -125,7 +126,7 @@ export const EnterpriseForm: React.FC<EnterpriseFormProps> = ({ onSubmit, isLoad
         {/* Title */}
         <div>
           <label htmlFor="ent-title" className="block text-sm font-bold text-slate-900 mb-1.5">
-            1. Título de la Decisión / Iniciativa Estratégica *
+            {t.form.labelTitle}
           </label>
           <input
             id="ent-title"
@@ -135,7 +136,7 @@ export const EnterpriseForm: React.FC<EnterpriseFormProps> = ({ onSubmit, isLoad
               setTitle(e.target.value);
               if (validationError) setValidationError(null);
             }}
-            placeholder="ej. Selección de Data Warehouse Central: Snowflake vs Databricks vs BigQuery"
+            placeholder={t.form.placeholderTitle}
             className="w-full px-4 py-2.5 text-sm rounded-lg border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-slate-900"
             disabled={isLoading}
           />
@@ -144,14 +145,14 @@ export const EnterpriseForm: React.FC<EnterpriseFormProps> = ({ onSubmit, isLoad
         {/* Business Objective / OKR */}
         <div>
           <label htmlFor="ent-objective" className="block text-sm font-bold text-slate-900 mb-1.5">
-            2. Objetivo de Negocio & OKRs Asociados (Métricas Cuantitativas Esperadas)
+            {t.form.labelObjective}
           </label>
           <textarea
             id="ent-objective"
             rows={2}
             value={businessObjective}
             onChange={(e) => setBusinessObjective(e.target.value)}
-            placeholder="ej. Reducir latencia de consultas P95 a <2s, recortar el OPEX de infraestructura en 25% y asegurar cumplimiento SOC2."
+            placeholder={t.form.placeholderObjective}
             className="w-full px-4 py-2.5 text-sm rounded-lg border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-slate-900"
             disabled={isLoading}
           />
@@ -161,7 +162,7 @@ export const EnterpriseForm: React.FC<EnterpriseFormProps> = ({ onSubmit, isLoad
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="block text-sm font-bold text-slate-900">
-              3. Alternativas Tecnológicas / Proveedores a Evaluar (mínimo 2) *
+              {t.form.labelAlternatives}
             </label>
             {optionNames.length < 4 && (
               <button
@@ -171,7 +172,7 @@ export const EnterpriseForm: React.FC<EnterpriseFormProps> = ({ onSubmit, isLoad
                 disabled={isLoading}
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Añadir Alternativa</span>
+                <span>{t.form.addAlternative}</span>
               </button>
             )}
           </div>
@@ -188,10 +189,10 @@ export const EnterpriseForm: React.FC<EnterpriseFormProps> = ({ onSubmit, isLoad
                   onChange={(e) => handleOptionChange(idx, e.target.value)}
                   placeholder={
                     idx === 0
-                      ? 'Alternativa 1 (ej. Snowflake Data Cloud)'
+                      ? t.form.altPlaceholder1
                       : idx === 1
-                      ? 'Alternativa 2 (ej. Databricks Lakehouse Platform)'
-                      : `Alternativa ${idx + 1}`
+                      ? t.form.altPlaceholder2
+                      : t.form.altPlaceholderN.replace('{n}', String(idx + 1))
                   }
                   className="grow px-3.5 py-2 text-sm rounded-lg border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-slate-900"
                   disabled={isLoading}
@@ -201,7 +202,7 @@ export const EnterpriseForm: React.FC<EnterpriseFormProps> = ({ onSubmit, isLoad
                     type="button"
                     onClick={() => handleRemoveOption(idx)}
                     className="p-2 text-slate-400 hover:text-rose-600 transition-colors shrink-0"
-                    title="Eliminar alternativa"
+                    title={t.common.delete}
                     disabled={isLoading}
                   >
                     <Trash2 className="w-4 h-4" />
@@ -216,14 +217,14 @@ export const EnterpriseForm: React.FC<EnterpriseFormProps> = ({ onSubmit, isLoad
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
           <div>
             <label htmlFor="ent-dept" className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
-              Departamento / Área Propietaria
+              {t.form.labelDept}
             </label>
             <input
               id="ent-dept"
               type="text"
               value={department}
               onChange={(e) => setDepartment(e.target.value)}
-              placeholder="ej. Data Platform / Cloud Engineering"
+              placeholder={t.form.placeholderDept}
               className="w-full px-3.5 py-2 text-sm rounded-lg border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-slate-900"
               disabled={isLoading}
             />
@@ -231,12 +232,12 @@ export const EnterpriseForm: React.FC<EnterpriseFormProps> = ({ onSubmit, isLoad
 
           <div>
             <label htmlFor="ent-budget" className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
-              Presupuesto Límite Estimado (USD, opcional)
+              {t.form.labelBudget}
             </label>
             <input
               id="ent-budget"
               type="number"
-              placeholder="ej. 150000"
+              placeholder={t.form.placeholderBudget}
               value={budgetConstraintUsd ?? ''}
               onChange={(e) => setBudgetConstraintUsd(e.target.value ? Number(e.target.value) : undefined)}
               className="w-full px-3.5 py-2 text-sm rounded-lg border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-slate-900 font-mono"
@@ -262,12 +263,12 @@ export const EnterpriseForm: React.FC<EnterpriseFormProps> = ({ onSubmit, isLoad
             {isLoading ? (
               <>
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                <span>Generando Matriz Cuantitativa & Análisis What-If...</span>
+                <span>{t.form.submittingButton}</span>
               </>
             ) : (
               <>
                 <Sparkles className="w-4 h-4 text-indigo-400" />
-                <span>Construir Evaluación Cuantitativa de Decisión</span>
+                <span>{t.form.submitButton}</span>
                 <ArrowRight className="w-4 h-4 ml-1" />
               </>
             )}

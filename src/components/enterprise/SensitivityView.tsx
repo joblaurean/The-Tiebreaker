@@ -1,16 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   SlidersHorizontal,
   RotateCcw,
   Zap,
-  TrendingUp,
-  AlertTriangle,
   CheckCircle2,
-  HelpCircle,
-  ShieldCheck,
 } from 'lucide-react';
-import type { EnterpriseCriterion, EnterpriseOption, CriterionRatingItem, SensitivityAnalysisResult } from '../../types/enterprise';
+import type { EnterpriseCriterion, EnterpriseOption, CriterionRatingItem } from '../../types/enterprise';
 import { calculateCompositeScores, runFullSensitivityAnalysis } from '../../utils/enterpriseDecision';
+import { useTranslation } from '../../i18n';
 
 interface SensitivityViewProps {
   options: EnterpriseOption[];
@@ -29,12 +26,12 @@ export const SensitivityView: React.FC<SensitivityViewProps> = ({
   onUpdateCriteriaWeights,
   onResetWeights,
 }) => {
+  const t = useTranslation();
   const currentResult = calculateCompositeScores(options, criteria, ratings);
   const sensitivityResult = runFullSensitivityAnalysis(options, criteria, ratings);
   const currentWinner = options.find((o) => o.id === currentResult.winnerOptionId) || options[0];
 
   const handleSliderChange = (criterionId: string, newWeight: number) => {
-    // Single slider change with proportional redistribution
     const otherCriteria = criteria.filter((c) => c.id !== criterionId);
     const sumOthers = otherCriteria.reduce((sum, c) => sum + c.weightPercent, 0);
     const clampedNew = Math.max(0, Math.min(100, newWeight));
@@ -62,13 +59,13 @@ export const SensitivityView: React.FC<SensitivityViewProps> = ({
           <div>
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
               <SlidersHorizontal className="w-4 h-4 text-indigo-600" />
-              <span>Simulador What-If de Sensibilidad</span>
+              <span>{t.sensitivity.sectionTag}</span>
             </div>
             <h2 className="text-xl font-bold text-slate-900">
-              Análisis de Robustez y Criterios Críticos
+              {t.sensitivity.title}
             </h2>
             <p className="text-xs text-slate-600 mt-1 max-w-2xl leading-relaxed">
-              Modifica los pesos en tiempo real para simular distintos escenarios de negociación entre stakeholders (Dirección Financiera vs. Operaciones vs. Seguridad) y evalúa si la decisión cambia de ganador.
+              {t.sensitivity.subtitle}
             </p>
           </div>
 
@@ -79,7 +76,7 @@ export const SensitivityView: React.FC<SensitivityViewProps> = ({
               className="px-3.5 py-2 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors border border-slate-200 flex items-center gap-1.5 whitespace-nowrap"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              <span>Restablecer Pesos Base</span>
+              <span>{t.sensitivity.resetBase}</span>
             </button>
           </div>
         </div>
@@ -88,7 +85,7 @@ export const SensitivityView: React.FC<SensitivityViewProps> = ({
         <div className="pt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
             <div className="text-xs text-slate-500 font-semibold mb-1">
-              Alternativa Ganadora Actual
+              {t.sensitivity.currentWinnerTitle}
             </div>
             <div className="flex items-baseline gap-2">
               <span className="font-bold text-slate-900 text-base truncate">
@@ -99,13 +96,13 @@ export const SensitivityView: React.FC<SensitivityViewProps> = ({
               </span>
             </div>
             <div className="font-mono text-sm font-extrabold text-indigo-600 mt-1 tabular-nums">
-              Score: {currentResult.scores[currentWinner.id]?.toFixed(2)} / 10
+              {t.common.score}: {currentResult.scores[currentWinner.id]?.toFixed(2)} / 10
             </div>
           </div>
 
           <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
             <div className="flex items-center justify-between text-xs text-slate-500 font-semibold mb-1">
-              <span>Índice de Estabilidad</span>
+              <span>{t.sensitivity.stabilityTitle}</span>
               <span className="font-mono font-bold text-slate-900 tabular-nums">
                 {sensitivityResult.stabilityIndex}%
               </span>
@@ -124,20 +121,20 @@ export const SensitivityView: React.FC<SensitivityViewProps> = ({
             </div>
             <p className="text-[11px] text-slate-500">
               {sensitivityResult.stabilityIndex >= 70
-                ? 'Robusto ante desacuerdos de prioridades'
-                : 'Sensible a la priorización'}
+                ? t.sensitivity.robustDesc
+                : t.sensitivity.sensitiveDesc}
             </p>
           </div>
 
           <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
             <div className="text-xs text-slate-500 font-semibold mb-1">
-              Margen de Victoria vs #2
+              {t.sensitivity.marginTitle}
             </div>
             <div className="font-mono text-2xl font-extrabold text-slate-900 tabular-nums">
-              +{currentResult.scoreGap.toFixed(2)} pts
+              +{currentResult.scoreGap.toFixed(2)} {t.common.pts}
             </div>
             <p className="text-[11px] text-slate-500 mt-0.5">
-              {currentResult.scoreGap >= 0.5 ? 'Ventaja sólida' : 'Empate técnico potencial'}
+              {currentResult.scoreGap >= 0.5 ? t.sensitivity.solidAdvantage : t.sensitivity.potentialTie}
             </p>
           </div>
         </div>
@@ -149,10 +146,10 @@ export const SensitivityView: React.FC<SensitivityViewProps> = ({
         <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-5 shadow-xs">
           <div className="flex items-center justify-between pb-3 border-b border-slate-100">
             <h3 className="text-sm font-bold text-slate-900">
-              Ajuste Dinámico de Ponderación (%)
+              {t.sensitivity.sliderPanelTitle}
             </h3>
-            <span className="text-[11px] text-slate-500">
-              Suma fija: 100%
+            <span className="text-[11px] text-slate-500 font-mono">
+              {t.sensitivity.fixedSum}
             </span>
           </div>
 
@@ -192,9 +189,9 @@ export const SensitivityView: React.FC<SensitivityViewProps> = ({
                     className="w-full accent-indigo-600 h-1.5 bg-slate-200 rounded-lg cursor-pointer"
                   />
                   <div className="flex justify-between text-[10px] text-slate-400 font-mono mt-1">
-                    <span>0% (Sin impacto)</span>
-                    <span>Base: {baseWeight}%</span>
-                    <span>80% (Prioridad absoluta)</span>
+                    <span>{t.sensitivity.noImpact}</span>
+                    <span>{t.sensitivity.baseLabel} {baseWeight}%</span>
+                    <span>{t.sensitivity.maxPriority}</span>
                   </div>
                 </div>
               );
@@ -207,8 +204,8 @@ export const SensitivityView: React.FC<SensitivityViewProps> = ({
           {/* Live Ranking Scoreboard */}
           <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-xs">
             <h3 className="text-sm font-bold text-slate-900 mb-4 pb-2 border-b border-slate-100 flex items-center justify-between">
-              <span>Ranking en Tiempo Real</span>
-              <span className="text-xs font-normal text-slate-500">Escenario Activo</span>
+              <span>{t.sensitivity.liveRankingTitle}</span>
+              <span className="text-xs font-normal text-slate-500">{t.sensitivity.activeScenario}</span>
             </h3>
 
             <div className="space-y-3">
@@ -238,7 +235,7 @@ export const SensitivityView: React.FC<SensitivityViewProps> = ({
                           <span className="font-mono text-[10px] text-slate-500">({opt.code})</span>
                         </div>
                         <span className="font-mono text-sm font-extrabold tabular-nums text-slate-900">
-                          {score.toFixed(2)} pts
+                          {score.toFixed(2)} {t.common.pts}
                         </span>
                       </div>
 
@@ -260,10 +257,10 @@ export const SensitivityView: React.FC<SensitivityViewProps> = ({
           <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-xs">
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-900 mb-3">
               <Zap className="w-4 h-4 text-amber-500" />
-              <span>Puntos de Quiebre (Switch Points)</span>
+              <span>{t.sensitivity.switchPointsTitle}</span>
             </div>
             <p className="text-xs text-slate-600 mb-4 leading-relaxed">
-              Muestra a qué umbral exacto de peso una alternativa competidora superaría a la opción líder actual:
+              {t.sensitivity.switchPointsDesc}
             </p>
 
             <div className="space-y-3">
@@ -271,16 +268,16 @@ export const SensitivityView: React.FC<SensitivityViewProps> = ({
                 <div className="p-3.5 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                   <span>
-                    No existe ningún punto de quiebre simple: la opción recomendada domina en todos los rangos razonables de ponderación.
+                    {t.sensitivity.noSwitchPoints}
                   </span>
                 </div>
               ) : (
                 sensitivityResult.switchPoints.map((sp, idx) => (
                   <div key={idx} className="p-3.5 rounded-lg bg-amber-50/60 border border-amber-200 text-xs text-amber-950">
                     <div className="font-bold mb-1 flex items-center justify-between">
-                      <span>Criterio: {sp.criterionName}</span>
+                      <span>{sp.criterionName}</span>
                       <span className="font-mono text-[11px] bg-amber-100 text-amber-900 px-1.5 py-0.5 rounded">
-                        Umbral: {sp.switchWeightPercent}% (Actual: {sp.currentWeightPercent}%)
+                        {t.sensitivity.thresholdLabel} {sp.switchWeightPercent}% ({t.sensitivity.currentLabel} {sp.currentWeightPercent}%)
                       </span>
                     </div>
                     <p className="leading-relaxed text-amber-900">

@@ -6,7 +6,6 @@ import {
   FileText,
   ArrowLeft,
   AlertCircle,
-  ExternalLink,
 } from 'lucide-react';
 import { EnterpriseNavbar } from './components/enterprise/EnterpriseNavbar';
 import { EnterpriseForm } from './components/enterprise/EnterpriseForm';
@@ -16,10 +15,9 @@ import { SensitivityView } from './components/enterprise/SensitivityView';
 import { DataEvidenceView } from './components/enterprise/DataEvidenceView';
 import { ExecutiveReportView } from './components/enterprise/ExecutiveReportView';
 import { EnterpriseHistoryDrawer } from './components/enterprise/EnterpriseHistoryDrawer';
-import { ENTERPRISE_PRESETS } from './data/enterprisePresets';
+import { getLocalizedEnterprisePresets, ENTERPRISE_PRESETS } from './data/enterprisePresets';
 import {
   generateFallbackEnterpriseDecision,
-  calculateCompositeScores,
   runFullSensitivityAnalysis,
 } from './utils/enterpriseDecision';
 import type {
@@ -28,12 +26,16 @@ import type {
   EnterpriseCriterion,
   DataEvidenceItem,
 } from './types/enterprise';
+import { LanguageProvider, useTranslation, useLanguage } from './i18n';
 
 type EnterpriseTab = 'matrix' | 'sensitivity' | 'evidence' | 'report';
 
 const STORAGE_KEY = 'the_tiebreaker_enterprise_decisions_v1';
 
-export default function App() {
+function AppContent() {
+  const t = useTranslation();
+  const { language } = useLanguage();
+
   const [decision, setDecision] = useState<EnterpriseDecision | null>(null);
   const [baseCriteria, setBaseCriteria] = useState<EnterpriseCriterion[]>([]);
   const [activeTab, setActiveTab] = useState<EnterpriseTab>('matrix');
@@ -59,12 +61,13 @@ export default function App() {
     const urlParams = new URLSearchParams(window.location.search);
     const autostart = urlParams.get('autostart');
     if (autostart === '1') {
-      const defaultPreset = ENTERPRISE_PRESETS[0];
+      const localizedPresets = getLocalizedEnterprisePresets(t);
+      const defaultPreset = localizedPresets[0] || ENTERPRISE_PRESETS[0];
       const initial = generateFallbackEnterpriseDecision(defaultPreset.input);
       setDecision(initial);
       setBaseCriteria(JSON.parse(JSON.stringify(initial.criteria)));
     }
-  }, []);
+  }, [t]);
 
   const saveToHistory = (item: EnterpriseDecision) => {
     try {
@@ -80,15 +83,20 @@ export default function App() {
     setIsLoading(true);
     setErrorMessage(null);
 
+    const payload: EnterpriseDecisionInput = {
+      ...input,
+      language,
+    };
+
     try {
       const response = await fetch('/api/analyze-enterprise-decision', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(input),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
-        throw new Error(`Error en el servidor (${response.status})`);
+        throw new Error(`${t.common.error} (${response.status})`);
       }
 
       const data: EnterpriseDecision = await response.json();
@@ -98,7 +106,7 @@ export default function App() {
       saveToHistory(data);
     } catch (err: unknown) {
       console.warn('Backend call failed, using heuristic enterprise engine fallback:', err);
-      const fallback = generateFallbackEnterpriseDecision(input);
+      const fallback = generateFallbackEnterpriseDecision(payload);
       setDecision(fallback);
       setBaseCriteria(JSON.parse(JSON.stringify(fallback.criteria)));
       setActiveTab('matrix');
@@ -232,18 +240,18 @@ export default function App() {
             <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="space-y-1">
                 <div className="flex flex-wrap items-center gap-2 text-[11px] sm:text-xs text-slate-500 font-mono">
-                  <span>ÁREA: {decision.department.toUpperCase()}</span>
+                  <span>{t.report.deptLabel.replace(':', '')}: {decision.department.toUpperCase()}</span>
                   <span>·</span>
-                  <span>{decision.options.length} ALTERNATIVAS</span>
+                  <span>{decision.options.length} {t.history.alternativesLabel.toUpperCase()}</span>
                   <span>·</span>
-                  <span>{decision.criteria.length} CRITERIOS</span>
+                  <span>{decision.criteria.length} {t.history.criteriaLabel.toUpperCase()}</span>
                 </div>
                 <h1 className="text-lg sm:text-2xl font-extrabold text-slate-900 tracking-tight leading-snug">
                   {decision.title}
                 </h1>
                 {decision.businessObjective && (
                   <p className="text-xs text-slate-600 max-w-4xl pt-0.5">
-                    <strong>Objetivo / OKR:</strong> {decision.businessObjective}
+                    <strong>{t.report.objectiveLabel}</strong> {decision.businessObjective}
                   </p>
                 )}
               </div>
@@ -255,7 +263,7 @@ export default function App() {
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 rounded-lg border border-slate-200 transition-colors"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>Modificar Iniciativa</span>
+                  <span>{t.common.back}</span>
                 </button>
               </div>
             </div>
@@ -275,7 +283,7 @@ export default function App() {
                 }`}
               >
                 <Table className="w-3.5 h-3.5" />
-                <span>1. Matriz Ponderada</span>
+                <span>1. {t.navbar.indicators.matrix}</span>
               </button>
 
               <button
@@ -288,7 +296,7 @@ export default function App() {
                 }`}
               >
                 <SlidersHorizontal className="w-3.5 h-3.5 text-indigo-400" />
-                <span>2. Análisis de Sensibilidad (What-If)</span>
+                <span>2. {t.navbar.indicators.whatif}</span>
               </button>
 
               <button
@@ -301,7 +309,7 @@ export default function App() {
                 }`}
               >
                 <Database className="w-3.5 h-3.5 text-sky-400" />
-                <span>3. Evidencias & Fuentes ({decision.options.reduce((a, o) => a + (o.dataEvidence?.length || 0), 0)})</span>
+                <span>3. {t.navbar.indicators.evidence} ({decision.options.reduce((a, o) => a + (o.dataEvidence?.length || 0), 0)})</span>
               </button>
 
               <button
@@ -314,7 +322,7 @@ export default function App() {
                 }`}
               >
                 <FileText className="w-3.5 h-3.5 text-amber-400" />
-                <span>4. Reporte Ejecutivo (Stakeholders)</span>
+                <span>4. {t.navbar.indicators.report}</span>
               </button>
             </div>
 
@@ -362,12 +370,12 @@ export default function App() {
       <footer className="mt-16 border-t border-slate-200 bg-white py-5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
           <div className="flex items-center gap-2">
-            <span className="font-bold text-slate-900">The Tiebreaker: Enterprise Edition</span>
+            <span className="font-bold text-slate-900">{t.footer.appName}</span>
             <span>·</span>
-            <span>Toma de Decisiones Cuantitativas para Analistas de Datos & Líderes de Proyecto</span>
+            <span>{t.footer.tagline}</span>
           </div>
           <div className="font-mono text-[11px] text-slate-400">
-            PCDA Matrix · What-If Sensitivity · Data Traceability · Board Ready
+            {t.footer.badges}
           </div>
         </div>
       </footer>
@@ -387,5 +395,13 @@ export default function App() {
         onClearAll={handleClearAllHistory}
       />
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <LanguageProvider>
+      <AppContent />
+    </LanguageProvider>
   );
 }

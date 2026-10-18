@@ -49,6 +49,12 @@ The platform empowers teams to:
   - Comparative criteria scorecard and audit trail.
 - **Clean Print & PDF Export:** Dedicated print stylesheet (`@media print`) designed for one-click executive PDF generation.
 
+### 5. Global Enterprise Multi-Language Support (i18n)
+- **6 Supported Languages:** English (`en`, default), Spanish (`es`), Portuguese (`pt`), French (`fr`), German (`de`), and Simplified Chinese (`zh`).
+- **Seamless UI Selector:** Accessible dropdown in the navigation bar with flag badges, language codes, and active checkmarks.
+- **Instant Global Reactivity:** Immediate component re-rendering powered by React Context and persistent user preference storage in `localStorage`.
+- **Multilingual AI Inference:** Backend Gemini inference prompts automatically align with the selected language for localized corporate rationale.
+
 ---
 
 ## 🛠️ Technology Stack

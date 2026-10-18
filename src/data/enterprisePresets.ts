@@ -1,4 +1,5 @@
 import type { EnterpriseDecisionInput } from '../types/enterprise';
+import type { Translations } from '../i18n/types';
 
 export interface EnterprisePreset {
   id: string;
@@ -8,15 +9,70 @@ export interface EnterprisePreset {
   input: EnterpriseDecisionInput;
 }
 
+export function getLocalizedEnterprisePresets(t: Translations): EnterprisePreset[] {
+  return [
+    {
+      id: 'data-stack-migration',
+      badge: t.presets.p1.badge,
+      domain: t.presets.p1.domain,
+      name: t.presets.p1.name,
+      input: {
+        title: t.presets.p1.title,
+        businessObjective: t.presets.p1.objective,
+        department: t.presets.p1.dept,
+        optionNames: [
+          t.presets.p1.opt1,
+          t.presets.p1.opt2,
+          t.presets.p1.opt3,
+        ],
+        budgetConstraintUsd: 180000,
+      },
+    },
+    {
+      id: 'cloud-infrastructure',
+      badge: t.presets.p2.badge,
+      domain: t.presets.p2.domain,
+      name: t.presets.p2.name,
+      input: {
+        title: t.presets.p2.title,
+        businessObjective: t.presets.p2.objective,
+        department: t.presets.p2.dept,
+        optionNames: [
+          t.presets.p2.opt1,
+          t.presets.p2.opt2,
+        ],
+        budgetConstraintUsd: 250000,
+      },
+    },
+    {
+      id: 'vector-ai-search',
+      badge: t.presets.p3.badge,
+      domain: t.presets.p3.domain,
+      name: t.presets.p3.name,
+      input: {
+        title: t.presets.p3.title,
+        businessObjective: t.presets.p3.objective,
+        department: t.presets.p3.dept,
+        optionNames: [
+          t.presets.p3.opt1,
+          t.presets.p3.opt2,
+          t.presets.p3.opt3,
+        ],
+        budgetConstraintUsd: 75000,
+      },
+    },
+  ];
+}
+
 export const ENTERPRISE_PRESETS: EnterprisePreset[] = [
   {
     id: 'data-stack-migration',
     badge: 'Data & Analytics',
-    domain: 'Infraestructura de Datos',
+    domain: 'Data Infrastructure',
     name: 'Snowflake vs. Databricks Lakehouse vs. BigQuery',
     input: {
-      title: 'Selección de Plataforma Central de Analítica & Data Warehouse para 2026-2028',
-      businessObjective: 'Centralizar más de 40 TB de telemetría y datos transaccionales, reducir la latencia P95 de queries a <2s y bajar el OPEX mensual de compute en al menos un 25%.',
+      title: 'Enterprise Analytics & Data Warehouse Platform Selection (2026-2028)',
+      businessObjective: 'Consolidate 40+ TB of telemetry and transactional data, maintain query P95 latency < 2s, and reduce monthly compute OPEX by 25%.',
       department: 'Data Platform & BI',
       optionNames: [
         'Snowflake Data Cloud (Separated Compute/Storage)',
@@ -29,32 +85,32 @@ export const ENTERPRISE_PRESETS: EnterprisePreset[] = [
   {
     id: 'cloud-infrastructure',
     badge: 'DevOps & Cloud',
-    domain: 'Arquitectura de Sistemas',
-    name: 'Multi-Cloud Kubernetes vs. Cloud Run / Serverless',
+    domain: 'Systems Architecture',
+    name: 'Multi-Cloud Kubernetes vs. Managed Serverless',
     input: {
-      title: 'Estrategia de Despliegue de Microservicios: Multi-Cloud EKS/GKE vs. Serverless Gestionado',
-      businessObjective: 'Garantizar SLA 99.99% para servicios críticos de facturación y APIs externas, manteniendo el equipo de infraestructura en menos de 3 FTEs dedicados.',
-      department: 'Infraestructura & Plataforma',
+      title: 'Microservices Deployment Strategy: Multi-Cloud EKS/GKE vs. Managed Serverless',
+      businessObjective: 'Ensure 99.99% uptime SLA for critical billing APIs while keeping the infrastructure operations team under 3 dedicated FTEs.',
+      department: 'Infrastructure & Platform',
       optionNames: [
-        'Arquitectura Multi-Cloud con Kubernetes (AWS EKS + GCP GKE)',
-        'Arquitectura Serverless Gestionada (GCP Cloud Run + AWS Lambda)',
+        'Multi-Cloud Kubernetes Architecture (AWS EKS + GCP GKE)',
+        'Managed Serverless Architecture (GCP Cloud Run + AWS Lambda)',
       ],
       budgetConstraintUsd: 250000,
     },
   },
   {
     id: 'vector-ai-search',
-    badge: 'IA & Búsqueda',
-    domain: 'Inteligencia Artificial',
-    name: 'Vertex AI Search vs. Pinecone Gestionado vs. Self-Hosted Qdrant',
+    badge: 'AI & Search',
+    domain: 'Artificial Intelligence',
+    name: 'Vertex AI Search vs. Managed Pinecone vs. Self-Hosted Qdrant',
     input: {
-      title: 'Evaluación de Base de Datos Vectorial & Pipeline RAG para Asistente Interno',
-      businessObjective: 'Indexar 2.5 millones de documentos corporativos, respetar permisos ACL de Google Workspace y mantener tiempos de respuesta de búsqueda híbrida (dense + sparse) inferiores a 120ms.',
+      title: 'Enterprise Vector Database & RAG Pipeline Evaluation for Internal Copilot',
+      businessObjective: 'Index 2.5 million corporate docs, honor Google Workspace ACL permissions, and guarantee hybrid search response latency under 120ms.',
       department: 'AI & Data Science',
       optionNames: [
         'Google Cloud Vertex AI Search & Vector Store',
         'Pinecone Serverless Vector Database',
-        'Clúster Self-Hosted Qdrant en Kubernetes',
+        'Self-Hosted Qdrant Cluster on Kubernetes',
       ],
       budgetConstraintUsd: 75000,
     },

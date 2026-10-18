@@ -3,15 +3,14 @@ import {
   Table,
   Plus,
   Trash2,
-  SlidersHorizontal,
   Award,
   AlertCircle,
   CheckCircle2,
-  Info,
   RotateCcw,
 } from 'lucide-react';
 import type { EnterpriseCriterion, EnterpriseOption, CriterionRatingItem } from '../../types/enterprise';
 import { calculateCompositeScores } from '../../utils/enterpriseDecision';
+import { useTranslation } from '../../i18n';
 
 interface WeightedMatrixViewProps {
   options: EnterpriseOption[];
@@ -32,7 +31,7 @@ export const WeightedMatrixView: React.FC<WeightedMatrixViewProps> = ({
   onAddCriterion,
   onDeleteCriterion,
 }) => {
-  const [editingCriterionId, setEditingCriterionId] = useState<string | null>(null);
+  const t = useTranslation();
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [newCritName, setNewCritName] = useState('');
   const [newCritCategory, setNewCritCategory] = useState<'Financial' | 'Technical' | 'Operational' | 'Strategic' | 'Risk'>('Technical');
@@ -66,7 +65,7 @@ export const WeightedMatrixView: React.FC<WeightedMatrixViewProps> = ({
       name: newCritName.trim(),
       category: newCritCategory,
       weightPercent: newCritWeight,
-      description: newCritDesc.trim() || 'Criterio personalizado añadido por el equipo.',
+      description: newCritDesc.trim() || 'Custom evaluation criterion added by team.',
       direction: 'higher_is_better',
     };
 
@@ -84,13 +83,13 @@ export const WeightedMatrixView: React.FC<WeightedMatrixViewProps> = ({
           <div>
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
               <Table className="w-4 h-4 text-indigo-600" />
-              <span>Matriz de Decisión Ponderada Multicriterio</span>
+              <span>{t.matrix.sectionTag}</span>
             </div>
             <h2 className="text-xl font-bold text-slate-900">
-              Evaluación Cuantitativa Ponderada
+              {t.matrix.title}
             </h2>
             <p className="text-xs text-slate-600 mt-0.5">
-              Cada alternativa se evalúa mediante notas cuantitativas normalizadas de 1 a 10 multiplicadas por el peso porcentual del criterio.
+              {t.matrix.subtitle}
             </p>
           </div>
 
@@ -106,7 +105,7 @@ export const WeightedMatrixView: React.FC<WeightedMatrixViewProps> = ({
               ) : (
                 <AlertCircle className="w-4 h-4 text-amber-600" />
               )}
-              <span>Suma de Pesos: {totalWeight.toFixed(1)}%</span>
+              <span>{t.matrix.sumOfWeights} {totalWeight.toFixed(1)}%</span>
             </div>
 
             {!isWeight100 && (
@@ -114,10 +113,10 @@ export const WeightedMatrixView: React.FC<WeightedMatrixViewProps> = ({
                 type="button"
                 onClick={handleNormalizeWeights}
                 className="px-3 py-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors border border-slate-200 flex items-center gap-1"
-                title="Ajustar proporcionalmente todos los pesos para que sumen 100%"
+                title={t.matrix.autoNormalize}
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                <span>Auto-normalizar a 100%</span>
+                <span>{t.matrix.autoNormalize}</span>
               </button>
             )}
 
@@ -127,7 +126,7 @@ export const WeightedMatrixView: React.FC<WeightedMatrixViewProps> = ({
               className="px-3 py-1.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors flex items-center gap-1 shadow-xs"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>Añadir Criterio</span>
+              <span>{t.matrix.addCriterion}</span>
             </button>
           </div>
         </div>
@@ -136,12 +135,12 @@ export const WeightedMatrixView: React.FC<WeightedMatrixViewProps> = ({
         {isAddingNew && (
           <form onSubmit={handleCreateCriterion} className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
             <div className="font-bold text-xs text-slate-900 uppercase tracking-wider">
-              Nuevo Criterio de Evaluación
+              {t.matrix.modalNewTitle}
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <input
                 type="text"
-                placeholder="Nombre (ej. Compatibilidad con dbt/Airflow)"
+                placeholder={t.matrix.namePlaceholder}
                 value={newCritName}
                 onChange={(e) => setNewCritName(e.target.value)}
                 className="px-3 py-2 text-xs rounded-lg border border-slate-300 bg-white"
@@ -152,11 +151,11 @@ export const WeightedMatrixView: React.FC<WeightedMatrixViewProps> = ({
                 onChange={(e) => setNewCritCategory(e.target.value as any)}
                 className="px-3 py-2 text-xs rounded-lg border border-slate-300 bg-white"
               >
-                <option value="Financial">Financiero (Financial)</option>
-                <option value="Technical">Técnico (Technical)</option>
-                <option value="Operational">Operativo (Operational)</option>
-                <option value="Strategic">Estratégico (Strategic)</option>
-                <option value="Risk">Riesgo / Compliance (Risk)</option>
+                <option value="Financial">{t.matrix.catFinancial}</option>
+                <option value="Technical">{t.matrix.catTechnical}</option>
+                <option value="Operational">{t.matrix.catOperational}</option>
+                <option value="Strategic">{t.matrix.catStrategic}</option>
+                <option value="Risk">{t.matrix.catRisk}</option>
               </select>
               <div className="flex items-center gap-2">
                 <input
@@ -167,12 +166,12 @@ export const WeightedMatrixView: React.FC<WeightedMatrixViewProps> = ({
                   onChange={(e) => setNewCritWeight(Number(e.target.value))}
                   className="w-20 px-3 py-2 text-xs rounded-lg border border-slate-300 bg-white font-mono"
                 />
-                <span className="text-xs text-slate-500 font-mono">% peso</span>
+                <span className="text-xs text-slate-500 font-mono">{t.matrix.weightLabel}</span>
               </div>
             </div>
             <input
               type="text"
-              placeholder="Descripción o métrica clave esperada..."
+              placeholder={t.matrix.descPlaceholder}
               value={newCritDesc}
               onChange={(e) => setNewCritDesc(e.target.value)}
               className="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 bg-white"
@@ -183,13 +182,13 @@ export const WeightedMatrixView: React.FC<WeightedMatrixViewProps> = ({
                 onClick={() => setIsAddingNew(false)}
                 className="px-3 py-1.5 text-xs text-slate-600 hover:text-slate-900"
               >
-                Cancelar
+                {t.common.cancel}
               </button>
               <button
                 type="submit"
                 className="px-4 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg shadow-xs"
               >
-                Guardar Criterio
+                {t.matrix.saveCriterion}
               </button>
             </div>
           </form>
@@ -202,10 +201,9 @@ export const WeightedMatrixView: React.FC<WeightedMatrixViewProps> = ({
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-900 text-white text-xs font-semibold tracking-wider">
-                <th className="py-3 px-4 w-72">Criterio & Categoría</th>
-                <th className="py-3 px-3 text-center w-28">Peso (%)</th>
-                {options.map((opt, idx) => {
-                  const score = matrixResult.scores[opt.id] ?? 0;
+                <th className="py-3 px-4 w-72">{t.matrix.colCriterion}</th>
+                <th className="py-3 px-3 text-center w-28">{t.matrix.colWeight}</th>
+                {options.map((opt) => {
                   const isLeader = matrixResult.winnerOptionId === opt.id;
 
                   return (
@@ -217,7 +215,7 @@ export const WeightedMatrixView: React.FC<WeightedMatrixViewProps> = ({
                         {isLeader && (
                           <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-400 text-slate-950">
                             <Award className="w-3 h-3" />
-                            <span>1.er Lugar</span>
+                            <span>{t.matrix.firstPlaceBadge}</span>
                           </span>
                         )}
                       </div>
@@ -232,7 +230,6 @@ export const WeightedMatrixView: React.FC<WeightedMatrixViewProps> = ({
             </thead>
             <tbody className="divide-y divide-slate-100 text-xs">
               {criteria.map((crit) => {
-                // Find highest score in this criterion row
                 let maxScore = -1;
                 options.forEach((opt) => {
                   const s = ratings[opt.id]?.[crit.id]?.score ?? 0;
@@ -274,7 +271,7 @@ export const WeightedMatrixView: React.FC<WeightedMatrixViewProps> = ({
                       const cell = ratings[opt.id]?.[crit.id] || {
                         rawValue: '-',
                         score: 5,
-                        rationale: 'Sin calificar',
+                        rationale: t.matrix.withoutRating,
                       };
                       const isRowWinner = cell.score === maxScore && maxScore > 0;
 
@@ -305,7 +302,7 @@ export const WeightedMatrixView: React.FC<WeightedMatrixViewProps> = ({
                             value={cell.score}
                             onChange={(e) => onUpdateRatingScore(opt.id, crit.id, Number(e.target.value))}
                             className="w-full accent-indigo-600 h-1 bg-slate-200 rounded-lg cursor-pointer mb-1.5"
-                            title={`Ajustar puntuación de ${opt.name}: ${cell.score}`}
+                            title={t.matrix.adjustScoreTooltip.replace('{name}', opt.name).replace('{score}', String(cell.score))}
                           />
 
                           <p className="text-[11px] text-slate-500 leading-tight">
@@ -322,7 +319,7 @@ export const WeightedMatrixView: React.FC<WeightedMatrixViewProps> = ({
                           type="button"
                           onClick={() => onDeleteCriterion(crit.id)}
                           className="p-1 text-slate-300 hover:text-rose-600 rounded transition-colors"
-                          title="Eliminar este criterio"
+                          title={t.matrix.deleteCriterionTooltip}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -336,7 +333,7 @@ export const WeightedMatrixView: React.FC<WeightedMatrixViewProps> = ({
             {/* Summary Row */}
             <tfoot>
               <tr className="bg-slate-100 border-t-2 border-slate-300 text-xs font-bold text-slate-900">
-                <td className="py-3.5 px-4">Puntuación Compuesta Ponderada (0 a 10)</td>
+                <td className="py-3.5 px-4">{t.matrix.compositeRowTitle}</td>
                 <td className="py-3.5 px-3 text-center font-mono tabular-nums text-slate-600">
                   {totalWeight.toFixed(0)}%
                 </td>
@@ -348,11 +345,11 @@ export const WeightedMatrixView: React.FC<WeightedMatrixViewProps> = ({
                     <td key={opt.id} className="py-3.5 px-4 border-l border-slate-200">
                       <div className="flex items-center justify-between">
                         <span className="font-mono text-base font-extrabold tabular-nums text-slate-900">
-                          {score.toFixed(2)} pts
+                          {score.toFixed(2)} {t.common.pts}
                         </span>
                         {isLeader ? (
                           <span className="font-mono text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">
-                            Recomendada
+                            {t.matrix.recommendedBadge}
                           </span>
                         ) : (
                           <span className="font-mono text-[10px] text-slate-500">

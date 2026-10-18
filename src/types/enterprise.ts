@@ -107,4 +107,6 @@ export interface EnterpriseDecisionInput {
   optionNames: string[];
   focusCriteria?: string[];
   budgetConstraintUsd?: number;
+  language?: string;
 }
+

@@ -396,35 +396,46 @@ app.post('/api/analyze-enterprise-decision', async (req, res) => {
       });
     }
 
-    const prompt = `
-Actúa como Chief Data & Architecture Officer y Consultor Estratégico Senior para la plataforma «The Tiebreaker: Enterprise Edition».
-Analiza cuantitativamente esta decisión empresarial de alto impacto para analistas de datos, líderes de proyecto y comités ejecutivos.
+    const targetLang = input.language || 'en';
+    const langInstructions: Record<string, string> = {
+      en: 'Respond in professional corporate English with high analytical rigor.',
+      es: 'Responde en español corporativo con alto rigor analítico.',
+      pt: 'Responda em português corporativo com alto rigor analítico.',
+      fr: 'Répondez en français professionnel d’entreprise avec une grande rigueur analytique.',
+      de: 'Antworten Sie auf professionellem Unternehmens-Deutsch mit hoher analytischer Präzision.',
+      zh: '请使用专业严谨的企业商务中文回答。',
+    };
+    const langDirective = langInstructions[targetLang] || langInstructions.en;
 
-Título de la Decisión: "${input.title}"
-Objetivo de Negocio / OKR: "${input.businessObjective || 'Optimizar rendimiento, escalabilidad y TCO corporativo.'}"
-Departamento: "${input.department || 'Data & Analytics'}"
-Alternativas a Comparar:
+    const prompt = `
+Act as a Chief Data & Architecture Officer and Senior Strategic Consultant for «The Tiebreaker: Enterprise Edition».
+Quantitatively analyze this strategic enterprise decision for data leaders, project managers, and executive steering committees.
+
+Decision Title: "${input.title}"
+Business Objective / OKRs: "${input.businessObjective || 'Optimize performance, scalability, and corporate TCO.'}"
+Department: "${input.department || 'Data & Analytics'}"
+Candidate Alternatives to Compare:
 ${input.optionNames.map((name, i) => `ALT-0${i + 1}: ${name}`).join('\n')}
 
-Instrucciones Cuantitativas de Nivel Empresarial:
-1. Define de 4 a 6 Criterios Ponderados que sumen exactamente 100% (Financial, Technical, Operational, Strategic, Risk). Asigna direction ('higher_is_better' o 'lower_is_better').
-2. Para cada alternativa genera:
-   - Código identificador (ALT-01, ALT-02...)
-   - CAPEX estimado en USD, OPEX anual en USD, Time to Value en semanas, RiskLevel ('Low', 'Medium', 'High').
-   - Resumen ejecutivo técnico.
-   - De 2 a 4 Métricas y Evidencias de Datos concretas vinculadas a fuentes reales (Snowflake, BigQuery, Datadog APM, FinOps AWS, SOC2 Type II, Benchmarks de la industria) con unidades y nivel de confianza (High CI 95% o Moderate).
-3. Matriz de Puntuación:
-   - Califica cada opción en cada criterio en una escala objetiva de 1 a 10 con rawValue (ej. "$180k/año", "Latencia P95 < 25ms", "99.99% SLA") y una justificación concisa.
-4. Reporte Ejecutivo para Stakeholders:
-   - Titular de aprobación estratégica.
-   - Resumen ejecutivo para el Comité de Dirección.
-   - Alineación estratégica con OKRs.
-   - Trade-offs clave cuantificados.
-   - Justificación para finanzas y operaciones.
-   - Hoja de ruta (Roadmap) de implementación en 3 fases con hitos y responsables (owner).
-   - Plan de mitigación de riesgos con nivel de severidad y planes de contingencia.
+Quantitative Enterprise Requirements:
+1. Define 4 to 6 Weighted Criteria that sum to exactly 100% (Financial, Technical, Operational, Strategic, Risk). Assign direction ('higher_is_better' or 'lower_is_better').
+2. For each alternative generate:
+   - Identifier code (ALT-01, ALT-02...)
+   - Estimated CAPEX in USD, Annual OPEX in USD, Time to Value in weeks, RiskLevel ('Low', 'Medium', 'High').
+   - Technical executive summary.
+   - 2 to 4 concrete empirical Data Metrics and Evidence tied to real data sources (Snowflake, BigQuery, Datadog APM, AWS FinOps, SOC2 Type II, Industry Benchmarks) with measurement units and confidence level (High CI 95% or Moderate).
+3. Scoring Matrix:
+   - Rate each option across each criterion on an objective 1 to 10 scale with rawValue (e.g. "$180k/yr", "P95 Latency < 25ms", "99.99% SLA") and a concise rationale.
+4. Executive Stakeholder Report:
+   - Strategic recommendation headline.
+   - Executive summary for the steering committee / board.
+   - Strategic alignment with business OKRs.
+   - Key quantified trade-offs.
+   - Financial and operational justification.
+   - 3-phase Implementation Roadmap with milestones and role owners.
+   - Risk mitigation plan with severity levels and contingency actions.
 
-Responde en español con rigor analítico corporativo. Formato JSON estricto según el esquema.
+${langDirective} Strict JSON format matching schema.
     `.trim();
 
     const response = await aiClient.models.generateContent({

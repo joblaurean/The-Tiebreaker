@@ -7,64 +7,79 @@ import {
   Award,
   Calendar,
   ShieldAlert,
-  ArrowRight,
   TrendingUp,
-  Clock,
-  CheckCircle2,
 } from 'lucide-react';
 import type { EnterpriseDecision } from '../../types/enterprise';
 import { calculateCompositeScores } from '../../utils/enterpriseDecision';
+import { useTranslation, useLanguage } from '../../i18n';
 
 interface ExecutiveReportViewProps {
   decision: EnterpriseDecision;
 }
 
 export const ExecutiveReportView: React.FC<ExecutiveReportViewProps> = ({ decision }) => {
+  const t = useTranslation();
+  const { language } = useLanguage();
   const [copied, setCopied] = useState(false);
   const matrixResult = calculateCompositeScores(decision.options, decision.criteria, decision.ratings);
   const winner = decision.options.find((o) => o.id === decision.executiveReport.winningOptionId) || decision.options[0];
 
+  const localeMap: Record<string, string> = {
+    en: 'en-US',
+    es: 'es-ES',
+    pt: 'pt-BR',
+    fr: 'fr-FR',
+    de: 'de-DE',
+    zh: 'zh-CN',
+  };
+
+  const formattedDate = new Date(decision.createdAt).toLocaleDateString(localeMap[language] || 'en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+
   const generateFullMarkdown = (): string => {
-    let md = `# REPORTE EJECUTIVO DE DECISIÓN: ${decision.title}\n`;
-    md += `*The Tiebreaker: Enterprise Edition — Fecha: ${new Date(decision.createdAt).toLocaleDateString('es-ES')}*\n`;
-    md += `*Departamento: ${decision.department} | Objetivo de Negocio: ${decision.businessObjective}*\n\n`;
+    let md = `# ${t.report.title.toUpperCase()}: ${decision.title}\n`;
+    md += `*The Tiebreaker: Enterprise Edition — ${t.report.dateIssued} ${formattedDate}*\n`;
+    md += `*${t.report.deptLabel} ${decision.department} | ${t.report.objectiveLabel} ${decision.businessObjective}*\n\n`;
 
-    md += `## 1. RECOMENDACIÓN ESTRATÉGICA\n`;
-    md += `**Dictamen:** ${decision.executiveReport.recommendationHeadline}\n\n`;
+    md += `## 1. ${t.report.summaryTitle.toUpperCase()}\n`;
+    md += `**${t.matrix.recommendedBadge}:** ${decision.executiveReport.recommendationHeadline}\n\n`;
     md += `> ${decision.executiveReport.executiveSummary}\n\n`;
-    md += `- **Puntuación Compuesta Ponderada:** ${matrixResult.scores[winner.id]?.toFixed(2)} / 10\n`;
-    md += `- **Margen sobre 2.ª opción:** +${matrixResult.scoreGap.toFixed(2)} puntos\n`;
-    md += `- **Índice de Estabilidad What-If:** ${decision.sensitivity.stabilityIndex}% (Resiliencia alta a cambios de peso)\n\n`;
+    md += `- **${t.report.compositeScoreLabel}** ${matrixResult.scores[winner.id]?.toFixed(2)} / 10\n`;
+    md += `- **${t.report.gapLabel}** +${matrixResult.scoreGap.toFixed(2)} ${t.common.pts}\n`;
+    md += `- **${t.report.whatIfStabilityLabel}** ${decision.sensitivity.stabilityIndex}%\n\n`;
 
-    md += `## 2. COMPROMISOS & TRADE-OFFS CLAVE\n`;
-    decision.executiveReport.keyTradeOffs.forEach((t) => {
-      md += `- ${t}\n`;
+    md += `## 2. ${t.report.tradeOffsTitle.toUpperCase()}\n`;
+    decision.executiveReport.keyTradeOffs.forEach((tradeoff) => {
+      md += `- ${tradeoff}\n`;
     });
     md += `\n`;
 
-    md += `## 3. JUSTIFICACIÓN CUANTITATIVA PARA STAKEHOLDERS & FINANZAS\n`;
+    md += `## 3. ${t.report.stakeholderJustificationTitle.toUpperCase()}\n`;
     md += `${decision.executiveReport.stakeholderJustification}\n\n`;
 
-    md += `## 4. MATRIZ DE DECISIÓN MULTICRITERIO RESUMIDA\n`;
-    md += `| Criterio | Peso | ${decision.options.map((o) => `${o.code} (${o.name})`).join(' | ')} |\n`;
+    md += `## 4. ${t.matrix.title.toUpperCase()}\n`;
+    md += `| ${t.matrix.colCriterion} | ${t.matrix.colWeight} | ${decision.options.map((o) => `${o.code} (${o.name})`).join(' | ')} |\n`;
     md += `| :--- | :---: | ${decision.options.map(() => ':---:').join(' | ')} |\n`;
     decision.criteria.forEach((c) => {
       const scores = decision.options.map((o) => `${decision.ratings[o.id]?.[c.id]?.score.toFixed(1) ?? '-'}/10`);
       md += `| ${c.name} (${c.category}) | ${c.weightPercent}% | ${scores.join(' | ')} |\n`;
     });
-    md += `| **Puntuación Final Ponderada** | 100% | ${decision.options.map((o) => `**${(matrixResult.scores[o.id] ?? 0).toFixed(2)} pts**`).join(' | ')} |\n\n`;
+    md += `| **${t.matrix.compositeRowTitle}** | 100% | ${decision.options.map((o) => `**${(matrixResult.scores[o.id] ?? 0).toFixed(2)} ${t.common.pts}**`).join(' | ')} |\n\n`;
 
-    md += `## 5. HOJA DE RUTA DE IMPLEMENTACIÓN\n`;
+    md += `## 5. ${t.report.roadmapTitle.toUpperCase()}\n`;
     decision.executiveReport.roadmap.forEach((r) => {
       md += `### ${r.phase} (${r.timeline})\n`;
-      md += `- **Hito:** ${r.milestone}\n`;
-      md += `- **Responsable:** ${r.owner}\n\n`;
+      md += `- **Milestone:** ${r.milestone}\n`;
+      md += `- **${t.report.ownerLabel}** ${r.owner}\n\n`;
     });
 
-    md += `## 6. PLAN DE MITIGACIÓN DE RIESGOS\n`;
+    md += `## 6. ${t.report.riskMatrixTitle.toUpperCase()}\n`;
     decision.executiveReport.riskMitigation.forEach((rm) => {
-      md += `- **[Riesgo - Severidad ${rm.severity}]** ${rm.risk}\n`;
-      md += `  *Plan de contingencia:* ${rm.contingency}\n`;
+      md += `- **[${rm.severity}]** ${rm.risk}\n`;
+      md += `  *${t.report.colContingency}:* ${rm.contingency}\n`;
     });
 
     return md;
@@ -87,10 +102,10 @@ export const ExecutiveReportView: React.FC<ExecutiveReportViewProps> = ({ decisi
         <div>
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
             <FileText className="w-4 h-4 text-indigo-600" />
-            <span>Documento para Comité de Dirección & Stakeholders</span>
+            <span>{t.report.sectionTag}</span>
           </div>
           <h2 className="text-xl font-bold text-slate-900">
-            Dossier Ejecutivo de Decisión Basado en Datos
+            {t.report.title}
           </h2>
         </div>
 
@@ -101,7 +116,7 @@ export const ExecutiveReportView: React.FC<ExecutiveReportViewProps> = ({ decisi
             className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg border border-slate-200 transition-colors"
           >
             <Printer className="w-3.5 h-3.5" />
-            <span>Imprimir / PDF</span>
+            <span>{t.report.printPdf}</span>
           </button>
 
           <button
@@ -112,12 +127,12 @@ export const ExecutiveReportView: React.FC<ExecutiveReportViewProps> = ({ decisi
             {copied ? (
               <>
                 <Check className="w-3.5 h-3.5 text-emerald-400" />
-                <span>¡Copiado!</span>
+                <span>{t.report.copiedNotice}</span>
               </>
             ) : (
               <>
                 <Copy className="w-3.5 h-3.5" />
-                <span>Copiar Markdown</span>
+                <span>{t.report.copyMarkdown}</span>
               </>
             )}
           </button>
@@ -129,14 +144,14 @@ export const ExecutiveReportView: React.FC<ExecutiveReportViewProps> = ({ decisi
         {/* Title Header Lockup */}
         <div className="border-b border-slate-200 pb-6 space-y-2">
           <div className="flex items-center justify-between text-xs text-slate-500 font-mono">
-            <span>REF: DEC-{decision.id.slice(-6).toUpperCase()}</span>
-            <span>Fecha de Emisión: {new Date(decision.createdAt).toLocaleDateString('es-ES')}</span>
+            <span>{t.report.refLabel} DEC-{decision.id.slice(-6).toUpperCase()}</span>
+            <span>{t.report.dateIssued} {formattedDate}</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight leading-snug">
             {decision.executiveReport.recommendationHeadline}
           </h1>
           <p className="text-sm text-slate-600 font-medium">
-            Departamento: <strong>{decision.department}</strong> · Objetivo: {decision.businessObjective}
+            {t.report.deptLabel} <strong>{decision.department}</strong> · {t.report.objectiveLabel} {decision.businessObjective}
           </p>
         </div>
 
@@ -144,17 +159,17 @@ export const ExecutiveReportView: React.FC<ExecutiveReportViewProps> = ({ decisi
         <div className="p-5 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
           <div className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
             <Award className="w-4 h-4 text-amber-500" />
-            <span>Resumen Ejecutivo para Stakeholders</span>
+            <span>{t.report.summaryTitle}</span>
           </div>
           <p className="text-sm text-slate-800 leading-relaxed font-normal">
             {decision.executiveReport.executiveSummary}
           </p>
           <div className="flex flex-wrap items-center gap-4 pt-2 text-xs text-slate-600 font-mono">
-            <span>Score Compuesto: <strong>{matrixResult.scores[winner.id]?.toFixed(2)} / 10</strong></span>
+            <span>{t.report.compositeScoreLabel} <strong>{matrixResult.scores[winner.id]?.toFixed(2)} / 10</strong></span>
             <span>·</span>
-            <span>Margen vs #2: <strong>+{matrixResult.scoreGap.toFixed(2)} pts</strong></span>
+            <span>{t.report.gapLabel} <strong>+{matrixResult.scoreGap.toFixed(2)} {t.common.pts}</strong></span>
             <span>·</span>
-            <span>Estabilidad What-If: <strong>{decision.sensitivity.stabilityIndex}%</strong></span>
+            <span>{t.report.whatIfStabilityLabel} <strong>{decision.sensitivity.stabilityIndex}%</strong></span>
           </div>
         </div>
 
@@ -162,7 +177,7 @@ export const ExecutiveReportView: React.FC<ExecutiveReportViewProps> = ({ decisi
         <div className="space-y-3">
           <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
             <TrendingUp className="w-4 h-4 text-indigo-600" />
-            <span>Compromisos & Trade-Offs Asumidos</span>
+            <span>{t.report.tradeOffsTitle}</span>
           </h3>
           <ul className="space-y-2">
             {decision.executiveReport.keyTradeOffs.map((tradeoff, i) => (
@@ -177,7 +192,7 @@ export const ExecutiveReportView: React.FC<ExecutiveReportViewProps> = ({ decisi
         {/* Stakeholder Justification */}
         <div className="space-y-2">
           <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-            Justificación Financiera y Operativa
+            {t.report.stakeholderJustificationTitle}
           </h3>
           <p className="text-xs text-slate-700 leading-relaxed bg-white p-4 rounded-lg border border-slate-200">
             {decision.executiveReport.stakeholderJustification}
@@ -188,7 +203,7 @@ export const ExecutiveReportView: React.FC<ExecutiveReportViewProps> = ({ decisi
         <div className="space-y-4">
           <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
             <Calendar className="w-4 h-4 text-indigo-600" />
-            <span>Hoja de Ruta de Implementación (Roadmap)</span>
+            <span>{t.report.roadmapTitle}</span>
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {decision.executiveReport.roadmap.map((stage, idx) => (
@@ -204,7 +219,7 @@ export const ExecutiveReportView: React.FC<ExecutiveReportViewProps> = ({ decisi
                   {stage.milestone}
                 </p>
                 <div className="pt-2 text-[10px] font-mono text-slate-500 border-t border-slate-100">
-                  Responsable: <strong className="text-slate-800">{stage.owner}</strong>
+                  {t.report.ownerLabel} <strong className="text-slate-800">{stage.owner}</strong>
                 </div>
               </div>
             ))}
@@ -215,15 +230,15 @@ export const ExecutiveReportView: React.FC<ExecutiveReportViewProps> = ({ decisi
         <div className="space-y-3">
           <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
             <ShieldAlert className="w-4 h-4 text-rose-600" />
-            <span>Matriz de Mitigación de Riesgos</span>
+            <span>{t.report.riskMatrixTitle}</span>
           </h3>
           <div className="border border-slate-200 rounded-xl overflow-hidden">
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase">
                 <tr>
-                  <th className="py-2.5 px-4 w-2/5">Riesgo Identificado</th>
-                  <th className="py-2.5 px-3 text-center w-24">Severidad</th>
-                  <th className="py-2.5 px-4">Plan de Contingencia / Mitigación</th>
+                  <th className="py-2.5 px-4 w-2/5">{t.report.colRisk}</th>
+                  <th className="py-2.5 px-3 text-center w-24">{t.report.colSeverity}</th>
+                  <th className="py-2.5 px-4">{t.report.colContingency}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
