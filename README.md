@@ -1,4 +1,3 @@
-[README (1).md](https://github.com/user-attachments/files/33635145/README.1.md)
 # The Tiebreaker: Enterprise Edition
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
